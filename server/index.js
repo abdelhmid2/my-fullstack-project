@@ -29,7 +29,6 @@ const corsOptions = {
       'http://localhost:5173',
       'http://localhost:3000',
     ];
-
     const vercelRegex = /\.vercel\.app$/;
 
     if (!origin || allowed.includes(origin) || vercelRegex.test(origin)) {
@@ -39,8 +38,8 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  allowedHeaders: 'Content-Type,Authorization'
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
