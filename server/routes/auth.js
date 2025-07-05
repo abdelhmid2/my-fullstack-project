@@ -1,9 +1,32 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import cors from 'cors';
 import User from '../models/User.js';
 
 const router = express.Router();
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://my-fullstack-project-snowy.vercel.app'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+};
+
+// تفعيل CORS على هذا الراوتر
+router.use(cors(corsOptions));
+router.options('*', cors(corsOptions));
+
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Register
