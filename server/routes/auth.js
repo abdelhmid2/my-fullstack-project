@@ -1,11 +1,28 @@
 import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import cors from 'cors';
-import User from '../models/User.js';
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import authRoutes from './routes/auth.js';
+import resourceRoutes from './routes/resources.js';
 
-const router = express.Router();
+dotenv.config();
 
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// MongoDB connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+  .then(() => {
+    console.log('✅ MongoDB Connected Successfully');
+  })
+  .catch((err) => {
+    console.error('❌ Failed to connect to MongoDB:', err.message);
+  });
+
+// ✅ CORS setup
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
@@ -14,133 +31,51 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: 'Content-Type,Authorization'
 };
 
-// تفعيل CORS على هذا الراوتر
-router.use(cors(corsOptions));
-router.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // ⬅️ هام جدًا للـ preflight
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+app.use(express.json());
 
-// Register
-router.post('/register', async (req, res) => {
-  try {
-    const { username, email, password, firstName, lastName } = req.body;
+// ✅ Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/resources', resourceRoutes);
 
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
-    });
-
-    if (existingUser) {
-      return res.status(400).json({ message: 'المستخدم موجود بالفعل' });
-    }
-
-    // لا تشفر كلمة السر هنا، السكيمة بتشفرها تلقائياً
-    const user = new User({
-      username,
-      email,
-      password,
-      firstName,
-      lastName
-    });
-
-    await user.save();
-
-    const token = jwt.sign(
-      { userId: user._id },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.status(201).json({
-      message: 'تم إنشاء الحساب بنجاح',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName
-      }
-    });
-
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ message: 'خطأ في إنشاء الحساب' });
-  }
+// ✅ Health Check
+app.get('/api/health', (req, res) => {
+  res.json({
+    message: 'Server is running',
+    status: 'OK',
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Login
-router.post('/login', async (req, res) => {
-  try {
-    const { username, password } = req.body;
-
-    const user = await User.findOne({
-      $or: [{ email: username }, { username }]
-    });
-
-    if (!user) {
-      return res.status(400).json({ message: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
-    }
-
-    const token = jwt.sign(
-      { userId: user._id },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
-      message: 'تم تسجيل الدخول بنجاح',
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName
-      }
-    });
-
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'خطأ في تسجيل الدخول' });
-  }
+// ✅ Error handling
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({
+    message: 'حدث خطأ في الخادم',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
+  });
 });
 
-// Get user profile
-router.get('/profile', async (req, res) => {
-  try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
-
-    if (!token) {
-      return res.status(401).json({ message: 'لا يوجد رمز دخول' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    const user = await User.findById(decoded.userId).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ message: 'المستخدم غير موجود' });
-    }
-
-    res.json(user);
-  } catch (error) {
-    console.error('Profile error:', error);
-    res.status(500).json({ message: 'خطأ في جلب البيانات' });
-  }
+// ✅ 404 Not Found
+app.use('*', (req, res) => {
+  res.status(404).json({ message: 'الصفحة غير موجودة' });
 });
 
-export default router;
+// ✅ Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+});
