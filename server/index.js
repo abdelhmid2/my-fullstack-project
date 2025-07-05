@@ -26,7 +26,8 @@ mongoose.connect(process.env.MONGO_URI, {
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://my-fullstack-project-snowy.vercel.app'
+  'https://my-fullstack-project-snowy.vercel.app',
+  'https://my-fullstack-project-git-main-abdos-projects-6479a1a9.vercel.app'
 ];
 
 const corsOptions = {
@@ -42,13 +43,14 @@ const corsOptions = {
   allowedHeaders: 'Content-Type,Authorization'
 };
 
-// تفعيل CORS لجميع الطلبات
+// ✅ تفعيل CORS لجميع الطلبات
 app.use(cors(corsOptions));
 
-// السماح بالرد على طلبات preflight (OPTIONS)
+// ✅ السماح بالرد على طلبات preflight (OPTIONS)
 app.options('*', cors(corsOptions));
 
-app.use(express.json()); // لتحليل JSON تلقائيًا من الطلبات
+// ✅ لتحليل JSON تلقائيًا من الطلبات
+app.use(express.json());
 
 // ✅ المسارات (Routes)
 app.use('/api/auth', authRoutes);
