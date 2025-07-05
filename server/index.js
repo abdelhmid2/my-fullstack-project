@@ -22,13 +22,21 @@ mongoose.connect(process.env.MONGO_URI, {
     console.error('❌ Failed to connect to MongoDB:', err.message);
   });
 
-// ✅ إعدادات الـ Middleware
+// ✅ إعدادات CORS الديناميكية
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://my-fullstack-project-snowy.vercel.app'
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://my-fullstack-project-snowy.vercel.app' // ✅ رابط Vercel المسموح له
-  ],
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
