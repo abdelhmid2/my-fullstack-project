@@ -29,7 +29,7 @@ const allowedOrigins = [
   'https://my-fullstack-project-snowy.vercel.app'
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -37,8 +37,16 @@ app.use(cors({
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
-}));
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: 'Content-Type,Authorization'
+};
+
+// تفعيل CORS لجميع الطلبات
+app.use(cors(corsOptions));
+
+// السماح بالرد على طلبات preflight (OPTIONS)
+app.options('*', cors(corsOptions));
 
 app.use(express.json()); // لتحليل JSON تلقائيًا من الطلبات
 
