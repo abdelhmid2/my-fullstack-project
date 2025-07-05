@@ -20,22 +20,22 @@ mongoose.connect(process.env.MONGO_URI, {
   console.error('❌ MongoDB Connection Error:', err.message);
 });
 
-// ✅ 🔥 FIX نهائي لـ CORS — للسماح بكل الطلبات مؤقتًا (يمكن تقفيله لاحقًا)
+// ✅ 🔥 FIX نهائي لـ CORS — يسمح مؤقتًا بجميع الدومينات
 app.use(cors({
-  origin: '*', // يسمح بأي دومين (مؤقتًا)
+  origin: '*', // يسمح بأي دومين (حل مؤقت لتفادي مشاكل CORS)
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.options('*', cors()); // هام جدًا للـ preflight requests
+app.options('*', cors()); // هام للطلبات المسبقة (OPTIONS / preflight)
 
-// ✅ Body Parser
+// ✅ لتحليل JSON في الطلبات
 app.use(express.json());
 
 // ✅ المسارات
 app.use('/api/auth', authRoutes);
 app.use('/api/resources', resourceRoutes);
 
-// ✅ Health Check
+// ✅ Route لفحص صحة السيرفر
 app.get('/api/health', (req, res) => {
   res.json({
     message: 'Server is running',
@@ -53,12 +53,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ صفحة غير موجودة
+// ✅ 404 - Route غير موجود
 app.use('*', (req, res) => {
   res.status(404).json({ message: 'الصفحة غير موجودة' });
 });
 
-// ✅ تشغيل السيرفر
+// ✅ بدء تشغيل السيرفر
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
