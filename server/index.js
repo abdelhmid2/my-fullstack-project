@@ -22,17 +22,17 @@ mongoose.connect(process.env.MONGO_URI, {
     console.error('❌ Failed to connect to MongoDB:', err.message);
   });
 
-// ✅ إعدادات CORS الديناميكية
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://my-fullstack-project-snowy.vercel.app',
-  'https://my-fullstack-project-git-main-abdos-projects-6479a1a9.vercel.app'
-];
-
+// ✅ إعدادات CORS المتقدمة لدعم كل روابط Vercel
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const allowed = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ];
+
+    const vercelRegex = /\.vercel\.app$/;
+
+    if (!origin || allowed.includes(origin) || vercelRegex.test(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -43,14 +43,9 @@ const corsOptions = {
   allowedHeaders: 'Content-Type,Authorization'
 };
 
-// ✅ تفعيل CORS لجميع الطلبات
 app.use(cors(corsOptions));
-
-// ✅ السماح بالرد على طلبات preflight (OPTIONS)
 app.options('*', cors(corsOptions));
-
-// ✅ لتحليل JSON تلقائيًا من الطلبات
-app.use(express.json());
+app.use(express.json()); // لتحليل JSON تلقائيًا من الطلبات
 
 // ✅ المسارات (Routes)
 app.use('/api/auth', authRoutes);
