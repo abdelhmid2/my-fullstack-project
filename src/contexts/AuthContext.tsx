@@ -47,7 +47,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = 'http://localhost:5000/api';
+  // ✅ تم تعديل الرابط هنا:
+  const API_URL = 'https://my-fullstack-project-production.up.railway.app/api';
 
   useEffect(() => {
     if (token) {
@@ -79,12 +80,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const { token: newToken, user: userData } = response.data;
-      
+
       setToken(newToken);
       setUser(userData);
       localStorage.setItem('token', newToken);
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
+
       return true;
     } catch (error: any) {
       setError(error.response?.data?.message || 'حدث خطأ في تسجيل الدخول');
@@ -96,14 +97,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setError(null);
       const response = await axios.post(`${API_URL}/auth/register`, userData);
-      
+
       const { token: newToken, user: newUser } = response.data;
-      
+
       setToken(newToken);
       setUser(newUser);
       localStorage.setItem('token', newToken);
       axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-      
+
       return true;
     } catch (error: any) {
       setError(error.response?.data?.message || 'حدث خطأ في إنشاء الحساب');
