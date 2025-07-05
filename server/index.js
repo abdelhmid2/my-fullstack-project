@@ -24,9 +24,14 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // ✅ إعدادات الـ Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://my-fullstack-project-snowy.vercel.app' // ✅ رابط Vercel المسموح له
+  ],
   credentials: true
 }));
+
 app.use(express.json()); // لتحليل JSON تلقائيًا من الطلبات
 
 // ✅ المسارات (Routes)
